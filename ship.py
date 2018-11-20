@@ -12,6 +12,7 @@ class StarShip:
         self.attack = 1
         self.max_hp = 5
         self.current_hp = 5
+        self.movement_speed = 3
 
         # positional attributes
         self.position_x = position_x
