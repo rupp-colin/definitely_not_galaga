@@ -5,7 +5,6 @@ import ship
 # define screen size
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 600
-MOVEMENT_SPEED = 3
 
 
 class ShittyGalaga(arcade.Window):
