@@ -105,10 +105,10 @@ class ShittyGalaga(arcade.Window):
         self.explosion_list.draw()
 
         # draw menu line
-        arcade.draw_line(0, 70, 1200, 70, arcade.color.CYBER_YELLOW, 5)
+        # arcade.draw_line(0, 70, 1200, 70, arcade.color.SMOKY_BLACK, 5)
         # Display level in menu
-        arcade.draw_text("Level 1", 500, 24, arcade.color.CYBER_YELLOW, 24)
-        arcade.draw_text(f"Score: {self.score}", 1050, 30, arcade.color.WHITE_SMOKE, 16)
+        arcade.draw_text("Level 1", 500, 24, arcade.color.SMOKY_BLACK, 24)
+        arcade.draw_text(f"Score: {self.score}", 1050, 30, arcade.color.SMOKY_BLACK, 16)
 
 
     def on_draw(self):
