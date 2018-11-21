@@ -3,11 +3,14 @@ import arcade
 import random
 import ship
 import asteroid as space_rock
+import explosions as boom
 
 # define screen size
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 600
 ASTEROID_COUNT = 30
+ASTEROID_EXPLOSION_TEXTURES = 51
+
 
 # attributes for ship
 movement_speed = 3
@@ -18,10 +21,12 @@ class ShittyGalaga(arcade.Window):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.color.BLACK)
 
-        # self.player = ship.StarShip(25, 300, 0, 0)
         self.player_list = None
         self.bullet_list = None
         self.asteroid_list = None
+        self.explosion_list = None
+
+        self.player_sprite = None
         self.score = 0
 
     def setup(self):
@@ -31,6 +36,15 @@ class ShittyGalaga(arcade.Window):
         self.bullet_list = arcade.SpriteList()
         self.asteroid_list = arcade.SpriteList()
         self.player_list = arcade.SpriteList()
+        self.explosion_list = arcade.SpriteList()
+
+        # preloading animation frames for explosions
+        explosion_texture_list = []
+        for i in range(ASTEROID_EXPLOSION_TEXTURES):
+            texture_name = f"images/asteroid_explosion/explosion{i:04d}.png"
+            explosion_texture_list.append(texture_name)
+
+        #self.explosion_list.preload_textures(explosion_texture_list)
 
         self.score = 0
 
@@ -56,6 +70,8 @@ class ShittyGalaga(arcade.Window):
         self.player_list.draw()
         self.asteroid_list.draw()
         self.bullet_list.draw()
+        self.explosion_list.draw()
+
         # draw menu line
         arcade.draw_line(0, 70, 1200, 70, arcade.color.WHITE_SMOKE, 5)
         # Display level in menu
@@ -101,6 +117,7 @@ class ShittyGalaga(arcade.Window):
         self.player_sprite.update()
         self.asteroid_list.update()
         self.bullet_list.update()
+        self.explosion_list.update()
 
         # player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
         # if len(player_got_hit) > 0:
@@ -110,6 +127,10 @@ class ShittyGalaga(arcade.Window):
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
             if len(hit_list) > 0:
+                explosion = boom.Explosion()
+                explosion.center_x = hit_list[0].center_x
+                explosion.center_y = hit_list[0].center_y
+                self.explosion_list.append(explosion)
                 bullet.kill()
 
             for asteroid in hit_list:
