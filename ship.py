@@ -57,8 +57,8 @@ class StarShip(arcade.Sprite):
         if self.center_y > SCREEN_HEIGHT - 50:
             self.center_y = SCREEN_HEIGHT - 50
 
-        if self.center_y < 90:
-            self.center_y = 90
+        if self.center_y < 97:
+            self.center_y = 97
 
         if self.center_x < 25:
             self.center_x = 25
