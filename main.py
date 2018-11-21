@@ -11,6 +11,11 @@ SCREEN_HEIGHT = 600
 ASTEROID_COUNT = 30
 ASTEROID_EXPLOSION_TEXTURES = 51
 
+# GAME STATES
+TITLE_PAGE = 0
+LEVEL_ONE = 1
+GAME_OVER = 2
+
 
 # attributes for ship
 movement_speed = 3
@@ -21,6 +26,8 @@ class ShittyGalaga(arcade.Window):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.color.BLACK)
 
+        self.current_state = TITLE_PAGE
+
         self.player_list = None
         self.bullet_list = None
         self.asteroid_list = None
@@ -28,6 +35,15 @@ class ShittyGalaga(arcade.Window):
 
         self.player_sprite = None
         self.score = 0
+
+        self.instructions = []
+        # load each background image for different screens
+        texture = arcade.load_texture("images/game_background.png")
+        self.instructions.append(texture)
+        # same texture for both instructions and level one, so append
+        # the same texture again
+        self.instructions.append(texture)
+
 
     def setup(self):
         """set up the game"""
@@ -61,11 +77,27 @@ class ShittyGalaga(arcade.Window):
             self.asteroid_list.append(asteroid)
 
 
-    def on_draw(self):
-        """Called whenever the window needs to be re-drawn"""
+    def draw_instructions_page(self, page_number):
+        """ draws a game state page"""
+        page_texture = self.instructions[page_number]
+        arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
+                                      page_texture.width, page_texture.height,
+                                      page_texture, 0)
+        arcade.draw_text("SHITTY GALAGA!!!", 230, 330, arcade.color.CYBER_YELLOW, 54)
+        arcade.draw_text("press any key to restart", 370, 250, arcade.color.WHITE_SMOKE, 24)
 
-        arcade.start_render()
 
+    def draw_game_over(self):
+        """Draws "GAME OVER" across the screen"""
+        arcade.draw_text("GAME OVER", 400, 300, arcade.color.WHITE, 54)
+        arcade.draw_text("press any key to restart", 350, 250, arcade.color.WHITE_SMOKE, 24)
+
+    def draw_game(self):
+        """draws the necessary things for the game"""
+        page_texture = self.instructions[0]
+        arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
+                                      page_texture.width, page_texture.height,
+                                      page_texture, 0)
         #self.player.draw_ship()
         self.player_list.draw()
         self.asteroid_list.draw()
@@ -73,13 +105,34 @@ class ShittyGalaga(arcade.Window):
         self.explosion_list.draw()
 
         # draw menu line
-        arcade.draw_line(0, 70, 1200, 70, arcade.color.WHITE_SMOKE, 5)
+        arcade.draw_line(0, 70, 1200, 70, arcade.color.CYBER_YELLOW, 5)
         # Display level in menu
-        arcade.draw_text("Level 1", 500, 24, arcade.color.WHITE_SMOKE, 24)
+        arcade.draw_text("Level 1", 500, 24, arcade.color.CYBER_YELLOW, 24)
         arcade.draw_text(f"Score: {self.score}", 1050, 30, arcade.color.WHITE_SMOKE, 16)
+
+
+    def on_draw(self):
+        """Called whenever the window needs to be re-drawn"""
+
+        arcade.start_render()
+        if self.current_state == TITLE_PAGE:
+            self.draw_instructions_page(0)
+        elif self.current_state == LEVEL_ONE:
+            self.draw_game()
+        else:
+            self.draw_game()
+            self.draw_game_over()
+
 
     def on_key_press(self, key, modifiers):
         """Called whenever the user presses a key"""
+        if self.current_state == TITLE_PAGE:
+            self.setup()
+            self.current_state = LEVEL_ONE
+        elif self.current_state == GAME_OVER:
+            self.current_state = TITLE_PAGE
+
+
         if key == arcade.key.SPACE:
             bullet = arcade.Sprite("laserBlue01.png", 0.7)
             bullet.center_x = self.player_sprite.center_x + 12
@@ -114,34 +167,35 @@ class ShittyGalaga(arcade.Window):
             self.player_sprite.change_y += movement_speed
 
     def update(self, delta_time):
-        self.player_sprite.update()
-        self.asteroid_list.update()
-        self.bullet_list.update()
-        self.explosion_list.update()
+        if self.current_state == LEVEL_ONE:
+            self.player_sprite.update()
+            self.asteroid_list.update()
+            self.bullet_list.update()
+            self.explosion_list.update()
 
-        # player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
-        # if len(player_got_hit) > 0:
-        #     player_sprite.kill()
-        #     asteroid.kill()
+            # player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
+            # if len(player_got_hit) > 0:
+            #     player_sprite.kill()
+            #     asteroid.kill()
 
-        for bullet in self.bullet_list:
-            hit_list = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
-            if len(hit_list) > 0:
-                explosion = boom.Explosion()
-                explosion.center_x = hit_list[0].center_x
-                explosion.center_y = hit_list[0].center_y
-                self.explosion_list.append(explosion)
-                bullet.kill()
+            for bullet in self.bullet_list:
+                hit_list = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
+                if len(hit_list) > 0:
+                    explosion = boom.Explosion()
+                    explosion.center_x = hit_list[0].center_x
+                    explosion.center_y = hit_list[0].center_y
+                    self.explosion_list.append(explosion)
+                    bullet.kill()
 
-            for asteroid in hit_list:
-                asteroid.center_x = random.randrange(SCREEN_WIDTH + 20,
-                                                     SCREEN_WIDTH + 100)
-                asteroid.center_y = random.randrange(100,
-                                                     SCREEN_HEIGHT - 20)
-                self.score += 1
+                for asteroid in hit_list:
+                    asteroid.center_x = random.randrange(SCREEN_WIDTH + 20,
+                                                         SCREEN_WIDTH + 100)
+                    asteroid.center_y = random.randrange(100,
+                                                         SCREEN_HEIGHT - 20)
+                    self.score += 1
 
-            if bullet.left > SCREEN_WIDTH:
-                bullet.kill()
+                if bullet.left > SCREEN_WIDTH:
+                    bullet.kill()
 
 
 def main():
