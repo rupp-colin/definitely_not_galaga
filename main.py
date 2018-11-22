@@ -173,10 +173,16 @@ class ShittyGalaga(arcade.Window):
             self.bullet_list.update()
             self.explosion_list.update()
 
-            # player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
-            # if len(player_got_hit) > 0:
-            #     player_sprite.kill()
-            #     asteroid.kill()
+            ################# WHEN THE PLAYER DIES ########################
+            for player in self.player_list:
+                player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
+                if len(player_got_hit) > 0:
+                    explosion = boom.Explosion()
+                    explosion.center_x = player_got_hit[0].center_x
+                    explosion.center_y = player_got_hit[0].center_y
+                    self.explosion_list.append(explosion)
+                    player.kill()
+                    self.current_state = GAME_OVER
 
             for bullet in self.bullet_list:
                 hit_list = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
