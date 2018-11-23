@@ -2,13 +2,14 @@
 import arcade
 import random
 import ship
+import enemy_fighter
 import asteroid as space_rock
 import explosions as boom
 
 # define screen size
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 600
-ASTEROID_COUNT = 30
+ASTEROID_COUNT = 25
 ASTEROID_EXPLOSION_TEXTURES = 51
 
 # GAME STATES
@@ -28,10 +29,14 @@ class ShittyGalaga(arcade.Window):
 
         self.current_state = TITLE_PAGE
 
+        self.frame_count = 0
+
         self.player_list = None
         self.bullet_list = None
+        self.enemyBullet_list = None
         self.asteroid_list = None
         self.explosion_list = None
+        self.enemy_list = None
 
         self.player_sprite = None
         self.score = 0
@@ -48,6 +53,17 @@ class ShittyGalaga(arcade.Window):
     def setup(self):
         """set up the game"""
 
+        # set up enemies for level
+        self.enemy_list = arcade.SpriteList()
+        enemy = enemy_fighter.EnemyFighter("images/enemy_ship01.png", 0.8)
+        enemy.center_x = 1150
+        enemy.center_y = 300
+        enemy.change_y = 3
+        enemy.angle = 90
+        self.enemy_list.append(enemy)
+
+        self.enemyBullet_list = arcade.SpriteList()
+
         # Set up player ship
         self.bullet_list = arcade.SpriteList()
         self.asteroid_list = arcade.SpriteList()
@@ -57,7 +73,7 @@ class ShittyGalaga(arcade.Window):
         # preloading animation frames for explosions
         explosion_texture_list = []
         for i in range(ASTEROID_EXPLOSION_TEXTURES):
-            texture_name = f"images/asteroid_explosion/explosion{i:04d}.png"
+            texture_name = f"images/asteroid_explosion/explosion{i:0>d}.png"
             explosion_texture_list.append(texture_name)
 
         #self.explosion_list.preload_textures(explosion_texture_list)
@@ -83,7 +99,7 @@ class ShittyGalaga(arcade.Window):
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       page_texture.width, page_texture.height,
                                       page_texture, 0)
-        arcade.draw_text("SHITTY GALAGA!!!", 230, 330, arcade.color.CYBER_YELLOW, 54)
+        arcade.draw_text("Definitely Not Galaga", 230, 330, arcade.color.CYBER_YELLOW, 54)
         arcade.draw_text("press any key to restart", 370, 250, arcade.color.WHITE_SMOKE, 24)
 
 
@@ -103,12 +119,15 @@ class ShittyGalaga(arcade.Window):
         self.asteroid_list.draw()
         self.bullet_list.draw()
         self.explosion_list.draw()
+        self.enemy_list.draw()
+        self.enemyBullet_list.draw()
 
         # draw menu line
         # arcade.draw_line(0, 70, 1200, 70, arcade.color.SMOKY_BLACK, 5)
         # Display level in menu
         arcade.draw_text("Level 1", 500, 24, arcade.color.SMOKY_BLACK, 24)
         arcade.draw_text(f"Score: {self.score}", 1050, 30, arcade.color.SMOKY_BLACK, 16)
+
 
 
     def on_draw(self):
@@ -123,7 +142,7 @@ class ShittyGalaga(arcade.Window):
             self.draw_game()
             self.draw_game_over()
 
-
+    # USER CONTROLS SECTION
     def on_key_press(self, key, modifiers):
         """Called whenever the user presses a key"""
         if self.current_state == TITLE_PAGE:
@@ -166,25 +185,71 @@ class ShittyGalaga(arcade.Window):
         if key == arcade.key.DOWN:
             self.player_sprite.change_y += movement_speed
 
+    # events updater
     def update(self, delta_time):
         if self.current_state == LEVEL_ONE:
             self.player_sprite.update()
             self.asteroid_list.update()
             self.bullet_list.update()
             self.explosion_list.update()
+            self.enemy_list.update()
+
+            self.frame_count += 1
+
+            for enemy in self.enemy_list:
+                if self.frame_count % 120 == 0:
+                    bullet = arcade.Sprite("fireBall.png", 0.3)
+                    bullet.center_x = enemy.center_x
+                    bullet.center_y = enemy.center_y
+                    bullet.change_x = -3
+                    self.enemyBullet_list.append(bullet)
+
+            for bullet in self.enemyBullet_list:
+                if bullet.right < 0:
+                    bullet.kill()
+
+            self.enemyBullet_list.update()
 
             ################# WHEN THE PLAYER DIES ########################
             for player in self.player_list:
-                player_got_hit = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
-                if len(player_got_hit) > 0:
+                player_asteroid = arcade.check_for_collision_with_list(self.player_sprite, self.asteroid_list)
+                player_enemyBullet = arcade.check_for_collision_with_list(self.player_sprite, self.enemyBullet_list)
+                if len(player_asteroid) > 0 or len(player_enemyBullet) > 0:
                     explosion = boom.Explosion()
-                    explosion.center_x = player_got_hit[0].center_x
-                    explosion.center_y = player_got_hit[0].center_y
-                    self.explosion_list.append(explosion)
-                    player.kill()
-                    self.current_state = GAME_OVER
+                    if len(player_asteroid) > 0:
+                        explosion.center_x = player_asteroid[0].center_x
+                        explosion.center_y = player_asteroid[0].center_y
+                        self.explosion_list.append(explosion)
+                        player.kill()
+                        self.current_state = GAME_OVER
+                    else:
+                        explosion.center_x = player_enemyBullet[0].center_x
+                        explosion.center_y = player_enemyBullet[0].center_y
+                        self.explosion_list.append(explosion)
+                        player.kill()
+                        self.current_state = GAME_OVER
 
             for bullet in self.bullet_list:
+                enemy_hit = arcade.check_for_collision_with_list(bullet, self.enemy_list)
+                if len(enemy_hit) > 0:
+                    for enemy in enemy_hit:
+                        if enemy.hp > 0:
+                            enemy.hp -= 1
+                            bullet.kill()
+                            # TODO DISPLAYS ENEMY HIT HITPOINTS REMOVE THIS AFTER TESTING
+                            arcade.draw_text(f"ENEMY HIT POINTS = {self.enemy_list[0].hp}", 20, 30, arcade.color.BLACK, 26)
+                            # kill the bullt
+                            # reduce enemy hp
+                            # if enemy HP ==0
+                        else:
+                            explosion = boom.Explosion()
+                            explosion.center_x = enemy.center_x
+                            explosion.center_y = enemy.center_y
+                            self.explosion_list.append(explosion)
+                            bullet.kill()
+                            enemy_hit[0].kill()
+                            self.score += 100
+
                 hit_list = arcade.check_for_collision_with_list(bullet, self.asteroid_list)
                 if len(hit_list) > 0:
                     explosion = boom.Explosion()

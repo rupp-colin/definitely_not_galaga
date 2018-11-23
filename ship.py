@@ -48,8 +48,6 @@ class StarShip(arcade.Sprite):
     #                      self.position_x + 14, self.position_y + 26,
     #                      arcade.color.WHITE, 1)
 
-    arcade.draw_rectangle_outline()
-
 
     def update(self):
         """animate the ship"""
