@@ -2,6 +2,8 @@
 
 Definite_not_galaga is a proof of concept game for a galaga like (but definitely NOT) space shooter.
 
+![screenshot a game that looks just like galaga](https://github.com/rupp-colin/definitely_not_galaga/blob/master/images/screenshot.png)
+
 ## Running the program
 
 * Download this repo, make sure to have python 3.6 or higher installed.  Instructions for downloading the latest
