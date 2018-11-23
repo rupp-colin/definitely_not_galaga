@@ -2,6 +2,7 @@
 import arcade
 import random
 import ship
+import enemy_fighter
 import asteroid as space_rock
 import explosions as boom
 
@@ -32,6 +33,7 @@ class ShittyGalaga(arcade.Window):
 
         self.player_list = None
         self.bullet_list = None
+        self.enemyBullet_list = None
         self.asteroid_list = None
         self.explosion_list = None
         self.enemy_list = None
@@ -53,11 +55,14 @@ class ShittyGalaga(arcade.Window):
 
         # set up enemies for level
         self.enemy_list = arcade.SpriteList()
-        enemy = arcade.Sprite("images/enemy_ship01.png", )
+        enemy = enemy_fighter.EnemyFighter("images/enemy_ship01.png", )
         enemy.center_x = 1150
-        enemy.center_y = 120
+        enemy.center_y = 300
+        enemy.change_y = 3
         enemy.angle = 90
         self.enemy_list.append(enemy)
+
+        self.enemyBullet_list = arcade.SpriteList()
 
         # Set up player ship
         self.bullet_list = arcade.SpriteList()
@@ -94,7 +99,7 @@ class ShittyGalaga(arcade.Window):
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       page_texture.width, page_texture.height,
                                       page_texture, 0)
-        arcade.draw_text("SHITTY GALAGA!!!", 230, 330, arcade.color.CYBER_YELLOW, 54)
+        arcade.draw_text("Definitely Not Galaga", 230, 330, arcade.color.CYBER_YELLOW, 54)
         arcade.draw_text("press any key to restart", 370, 250, arcade.color.WHITE_SMOKE, 24)
 
 
@@ -115,6 +120,7 @@ class ShittyGalaga(arcade.Window):
         self.bullet_list.draw()
         self.explosion_list.draw()
         self.enemy_list.draw()
+        self.enemyBullet_list.draw()
 
         # draw menu line
         # arcade.draw_line(0, 70, 1200, 70, arcade.color.SMOKY_BLACK, 5)
@@ -191,13 +197,17 @@ class ShittyGalaga(arcade.Window):
 
             for enemy in self.enemy_list:
                 if self.frame_count % 120 == 0:
-                    bullet = arcade.Sprite("laserBlue01.png")
+                    bullet = arcade.Sprite("fireBall.png", 0.3)
                     bullet.center_x = enemy.center_x
                     bullet.center_y = enemy.center_y
                     bullet.change_x = -3
-                    bullet.angle = 180
-                    self.bullet_list.append(bullet)
+                    self.enemyBullet_list.append(bullet)
 
+            for bullet in self.enemyBullet_list:
+                if bullet.right < 0:
+                    bullet.kill()
+
+            self.enemyBullet_list.update()
 
             ################# WHEN THE PLAYER DIES ########################
             for player in self.player_list:
