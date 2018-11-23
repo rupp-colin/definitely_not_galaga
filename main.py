@@ -28,10 +28,13 @@ class ShittyGalaga(arcade.Window):
 
         self.current_state = TITLE_PAGE
 
+        self.frame_count = 0
+
         self.player_list = None
         self.bullet_list = None
         self.asteroid_list = None
         self.explosion_list = None
+        self.enemy_list = None
 
         self.player_sprite = None
         self.score = 0
@@ -48,6 +51,14 @@ class ShittyGalaga(arcade.Window):
     def setup(self):
         """set up the game"""
 
+        # set up enemies for level
+        self.enemy_list = arcade.SpriteList()
+        enemy = arcade.Sprite("images/enemy_ship01.png", )
+        enemy.center_x = 1150
+        enemy.center_y = 120
+        enemy.angle = 90
+        self.enemy_list.append(enemy)
+
         # Set up player ship
         self.bullet_list = arcade.SpriteList()
         self.asteroid_list = arcade.SpriteList()
@@ -57,7 +68,7 @@ class ShittyGalaga(arcade.Window):
         # preloading animation frames for explosions
         explosion_texture_list = []
         for i in range(ASTEROID_EXPLOSION_TEXTURES):
-            texture_name = f"images/asteroid_explosion/explosion{i:04d}.png"
+            texture_name = f"images/asteroid_explosion/explosion{i:0>d}.png"
             explosion_texture_list.append(texture_name)
 
         #self.explosion_list.preload_textures(explosion_texture_list)
@@ -103,6 +114,7 @@ class ShittyGalaga(arcade.Window):
         self.asteroid_list.draw()
         self.bullet_list.draw()
         self.explosion_list.draw()
+        self.enemy_list.draw()
 
         # draw menu line
         # arcade.draw_line(0, 70, 1200, 70, arcade.color.SMOKY_BLACK, 5)
@@ -123,7 +135,7 @@ class ShittyGalaga(arcade.Window):
             self.draw_game()
             self.draw_game_over()
 
-
+    # USER CONTROLS SECTION
     def on_key_press(self, key, modifiers):
         """Called whenever the user presses a key"""
         if self.current_state == TITLE_PAGE:
@@ -166,12 +178,26 @@ class ShittyGalaga(arcade.Window):
         if key == arcade.key.DOWN:
             self.player_sprite.change_y += movement_speed
 
+    # events updater
     def update(self, delta_time):
         if self.current_state == LEVEL_ONE:
             self.player_sprite.update()
             self.asteroid_list.update()
             self.bullet_list.update()
             self.explosion_list.update()
+            self.enemy_list.update()
+
+            self.frame_count += 1
+
+            for enemy in self.enemy_list:
+                if self.frame_count % 120 == 0:
+                    bullet = arcade.Sprite("laserBlue01.png")
+                    bullet.center_x = enemy.center_x
+                    bullet.center_y = enemy.center_y
+                    bullet.change_x = -3
+                    bullet.angle = 180
+                    self.bullet_list.append(bullet)
+
 
             ################# WHEN THE PLAYER DIES ########################
             for player in self.player_list:
