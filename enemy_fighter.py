@@ -5,6 +5,8 @@ SCREEN_WIDTH = 1200
 
 class EnemyFighter(arcade.Sprite):
 
+    arcade.Sprite.hp = 20
+
     def update(self):
         self.center_y += self.change_y
 
